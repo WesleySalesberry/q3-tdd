@@ -7,13 +7,15 @@ Students MUST EDIT this module, to add more tests to run
 against the 'echo.py' program.
 """
 
-__author__ = "???"
+__author__ = "Wesley Salesberry"
 
 import sys
 import importlib
+import inspect
 import argparse
 import unittest
 import subprocess
+import echo
 
 # devs: change this to 'soln.echo' to run this suite against the solution
 PKG_NAME = 'echo'
@@ -58,19 +60,25 @@ class TestEcho(unittest.TestCase):
     def test_parser(self):
         """Check if create_parser() returns a parser object"""
         result = self.module.create_parser()
-        self.assertIsInstance(
-            result, argparse.ArgumentParser,
-            "create_parser() function is not returning a parser object")
+        self.assertIsInstance(result, argparse.ArgumentParser,
+                              "create_parser() function is not returning a parser object")
 
+        args = ["--lower", "-l", "--upper", "-u", "--title", "HELLO"]
+        ns = self.parser.parse_args(args)
+        self.assertTrue(ns.lower)
+        self.assertTrue(ns.upper)
+        self.assertTrue(ns.title)
+        self.assertTrue(ns.text)
+        self.assertEquals(echo.main(args), "Hello")
     #
     # Students: add more parser tests here:
     # - Does it understand the --upper option?
     # - Does it understand `--lower` ? or `--title` ?
     # - If you enable one option as true, are the rest false?
     #
+
     def test_parser_namespace(self):
-        # your code here
-        self.fail()  # replace me
+        self.assertNotEqual(self.module.__author__, '???')
 
     def test_echo(self):
         """Check if main() function prints anything at all"""
@@ -79,18 +87,14 @@ class TestEcho(unittest.TestCase):
 
     def test_simple_echo(self):
         """Check if main actually echoes an input string"""
-        args = ['Was soll die ganze Aufregung?']
-        output = run_capture(self.module.__file__, args)
-        self.assertEqual(
-            output[0], args[0],
-            "The program is not performing simple echo"
-            )
+        self.parser = echo.create_parser()
 
     def test_lower_short(self):
         """Check if short option '-l' performs lowercasing"""
         args = ["-l", "HELLO WORLD"]
-        output = run_capture(self.module.__file__, args)
-        self.assertEqual(output[0], "hello world")
+        ns = run_capture(self.module.__file__, args)
+
+        self.assertEqual(ns[0], "hello world")
 
     #
     # Students: add more cmd line options tests below.
@@ -98,32 +102,48 @@ class TestEcho(unittest.TestCase):
     #
 
     def test_lower_long(self):
-        # your code here
-        self.fail()  # replace me
+        args = ["--lower", "HELLO WORLD"]
+        ns = run_capture(self.module.__file__, args)
+        self.assertEqual(ns[0], "hello world")
 
     def test_upper_short(self):
-        # your code here
-        self.fail()  # replace me
+        """Check if short option '-l' performs lowercasing"""
+        args = ["-u", "hello world"]
+        ns = run_capture(self.module.__file__, args)
+        self.assertEqual(ns[0], "HELLO WORLD")
 
     def test_upper_long(self):
         # your code here
-        self.fail()  # replace me
+        """Check if short option '-l' performs lowercasing"""
+        args = ["--upper", "hello world"]
+        ns = run_capture(self.module.__file__, args)
+        self.assertEqual(ns[0], "HELLO WORLD")
 
     def test_title_short(self):
-        # your code here
-        self.fail()  # replace me
+        """Check if short option '-l' performs lowercasing"""
+        args = ["-t", "hello world"]
+        ns = run_capture(self.module.__file__, args)
+        self.assertEqual(ns[0], "Hello World")
 
     def test_title_long(self):
-        # your code here
-        self.fail()  # replace me
+        """Check if short option '-l' performs lowercasing"""
+        args = ["--title", "hello world"]
+        ns = run_capture(self.module.__file__, args)
+        self.assertEqual(ns[0], "Hello World")
 
     def test_multiple_options(self):
         # your code here
         self.fail()  # replace me
 
     def test_help_message(self):
-        # your code here
-        self.fail()  # replace me
+        process = subprocess.Popen(
+            ["python", "./echo.py", "-h"], stdout=subprocess.PIPE)
+        stdout, _ = process.communicate()
+        stdout = stdout.decode('utf8')
+        with open("./USAGE") as f:
+            usage = f.read()
+
+        self.assertEquals(stdout, usage)
 
     #
     # Students: add a flake8 test here.
@@ -131,7 +151,8 @@ class TestEcho(unittest.TestCase):
     #
     def test_flake8(self):
         # your code here
-        self.fail()  # replace me
+        result = subprocess.run(['flake8', self.module.__file__])
+        self.assertEqual(result.returncode, 0)
 
     #
     # Students: add an __author__ test here.
@@ -139,7 +160,7 @@ class TestEcho(unittest.TestCase):
     #
     def test_author(self):
         # your code here
-        self.fail()  # replace me
+        self.assertNotEqual(self.module.__author__, '???')
 
 
 if __name__ == '__main__':
